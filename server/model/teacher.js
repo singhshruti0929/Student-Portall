@@ -11,7 +11,6 @@ const teacherSchema = new Schema(
       type: Number,
       required: true,
     },
-
     gender: {
       type: String,
       require: true,
@@ -20,10 +19,13 @@ const teacherSchema = new Schema(
       type: String,
       required: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
 const teacherModel = mongoose.model("teachers", teacherSchema);
-
 module.exports = teacherModel;

@@ -28,6 +28,10 @@ const studentSchema = new Schema(
       type: Array,
       required: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

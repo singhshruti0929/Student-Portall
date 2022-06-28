@@ -1,5 +1,4 @@
 const student = require("../model/student");
-const teacherModel = require("../model/teacher");
 
 exports.addStudent = async (req, res, next) => {
   try {
@@ -9,24 +8,32 @@ exports.addStudent = async (req, res, next) => {
     res.json({ Student, status: true });
   } catch (err) {
     console.log(err);
-    res.json({ error, status: false });
+    res.json({ err, status: false });
   }
 };
-
 exports.getStudents = async (req, res, next) => {
   try {
-    const students = await student.find();
+    const students = await student.find({ isActive: true });
     res.json({ students, status: true });
   } catch {
     res.json({ students: null, status: false });
   }
 };
+exports.getStudent = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const sinleStudent = await student.findById(id);
 
-exports.getBySubjects = async (req, res) => {
-  console.log(req.body);
+    res.json({ sinleStudent, status: true });
+  } catch {
+    res.json({ sinleStudent: null, status: false });
+  }
+};
+exports.getBySubject = async (req, res) => {
   try {
     const subject = await student.aggregate([
-      { $match: { subject: req.body.subject } },
+      { $match: { subject: req.params.subject } },
+      { $match: { isActive: true } },
       {
         $lookup: {
           from: "teachers",
@@ -36,12 +43,15 @@ exports.getBySubjects = async (req, res) => {
         },
       },
     ]);
+    if (subject.length < 1) {
+      res.json({ matched: null, status: false });
+      return;
+    }
     res.json({ matched: subject, status: true });
   } catch {
-    res.json({ students: null, status: false });
+    res.json({ matched: null, status: false });
   }
 };
-
 exports.getByClass = async (req, res) => {
   try {
     const Class = await student.aggregate([
@@ -50,5 +60,52 @@ exports.getByClass = async (req, res) => {
     res.json({ classes: Class, status: true });
   } catch {
     res.json({ classes: null, status: false });
+  }
+};
+exports.updateStudent = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+    const User = await student.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { new: true }
+    );
+    res.json({ User, status: true });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, status: false });
+  }
+};
+exports.deleteStudent = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const deleteStudent = await student.findByIdAndDelete(id);
+    res.json({ deleteStudent, status: true });
+  } catch {
+    res.json({ deleteStudent: null, status: false });
+  }
+};
+
+exports.softDelete = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    console.log(req.body);
+    const findStudent = await student.findOne({ _id: id });
+    if (findStudent) {
+      await student.findByIdAndUpdate(
+        { _id: id },
+        {
+          $set: {
+            isActive: req.body.isActive,
+          },
+        }
+      );
+    }
+    // console.log(findStudent);
+    res.json({ findStudent, status: true });
+  } catch (err) {
+    console.log(err);
+    res.json({ err, status: false });
   }
 };
